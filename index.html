@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>今天吃什麼？附近美食大輪盤</title>
+    <title>今天吃什麼？精準版美食輪盤</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,13 +23,21 @@
             </div>
 
             <div class="setting-row">
-                <label for="searchRadius">距離：</label>
-                <select id="searchRadius">
-                    <option value="500">500公尺 (走路約 6分鐘)</option>
-                    <option value="1000" selected>1公里 (走路約 12分鐘)</option>
-                    <option value="1500">1.5公里 (走路約 18分鐘)</option>
-                    <option value="2000">2公里 (騎車約 5分鐘)</option>
-                    <option value="3000">3公里 (騎車約 8分鐘)</option>
+                <label for="transportMode">交通：</label>
+                <select id="transportMode">
+                    <option value="WALKING" selected>走路 🚶</option>
+                    <option value="DRIVING">機車/開車 🛵</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label for="maxTime">時間：</label>
+                <select id="maxTime">
+                    <option value="5">5 分鐘內</option>
+                    <option value="10" selected>10 分鐘內</option>
+                    <option value="15">15 分鐘內</option>
+                    <option value="20">20 分鐘內</option>
+                    <option value="30">30 分鐘內</option>
                 </select>
             </div>
 
@@ -50,12 +58,13 @@
         <div class="wheel-container">
             <canvas id="wheel" width="400" height="400"></canvas>
             <div id="pointer">▼</div>
-            <button id="spinBtn">開始抽籤</button>
+            <button id="spinBtn" disabled style="opacity: 0.5; cursor: not-allowed;">請先搜尋店家</button>
         </div>
 
         <div id="result">
             <h2 id="storeName">準備好就搜尋店家吧！</h2>
             <p id="storeAddress"></p>
+            <p id="storeDistance" style="color: #666; font-size: 0.9em;"></p>
             <a id="menuLink" href="#" target="_blank" style="display:none;">📍 查看地圖與評價</a>
         </div>
     </div>
