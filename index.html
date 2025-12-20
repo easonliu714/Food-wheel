@@ -11,14 +11,40 @@
         <h1>🍴 今天吃什麼？</h1>
         
         <div class="controls">
-            <select id="mealType">
-                <option value="breakfast">早餐</option>
-                <option value="lunch">中午正餐</option>
-                <option value="afternoon_tea">下午茶飲</option>
-                <option value="dinner">晚餐</option>
-                <option value="late_night">宵夜</option>
-            </select>
-            <button onclick="fetchNearbyPlaces()">重新整理附近店家</button>
+            <div class="setting-row">
+                <label for="mealType">時段：</label>
+                <select id="mealType">
+                    <option value="breakfast">早餐</option>
+                    <option value="lunch">中午正餐</option>
+                    <option value="afternoon_tea">下午茶飲</option>
+                    <option value="dinner">晚餐</option>
+                    <option value="late_night">宵夜</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label for="searchRadius">距離：</label>
+                <select id="searchRadius">
+                    <option value="500">500公尺 (走路約 6分鐘)</option>
+                    <option value="1000" selected>1公里 (走路約 12分鐘)</option>
+                    <option value="1500">1.5公里 (走路約 18分鐘)</option>
+                    <option value="2000">2公里 (騎車約 5分鐘)</option>
+                    <option value="3000">3公里 (騎車約 8分鐘)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label for="resultCount">數量：</label>
+                <select id="resultCount">
+                    <option value="10">10 家</option>
+                    <option value="20" selected>20 家 (預設)</option>
+                    <option value="30">30 家</option>
+                    <option value="40">40 家</option>
+                    <option value="50">50 家 (最多)</option>
+                </select>
+            </div>
+
+            <button onclick="fetchNearbyPlaces()" class="search-btn">🔄 搜尋附近店家</button>
         </div>
 
         <div class="wheel-container">
@@ -28,9 +54,9 @@
         </div>
 
         <div id="result">
-            <h2 id="storeName">點擊輪盤開始抉擇</h2>
+            <h2 id="storeName">準備好就搜尋店家吧！</h2>
             <p id="storeAddress"></p>
-            <a id="menuLink" href="#" target="_blank" style="display:none;">查看地圖與菜單</a>
+            <a id="menuLink" href="#" target="_blank" style="display:none;">📍 查看地圖與評價</a>
         </div>
     </div>
 
