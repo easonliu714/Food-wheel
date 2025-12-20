@@ -40,13 +40,13 @@ function fetchNearbyPlaces() {
 
         const request = {
             location: userLoc,
-            radius: '2000', // 2公里
+            radius: '1000', // 1000公尺
             query: keywords[type]
         };
 
         service.textSearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
-                places = results.slice(0, 10); // 取前10筆避免輪盤太擠
+                places = results.slice(0, 20); // 取前20筆避免輪盤太擠
                 drawWheel();
             }
         });
