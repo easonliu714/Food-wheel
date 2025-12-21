@@ -3,6 +3,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: fl
 
 h1 { color: #333; margin-bottom: 20px; }
 
+/* 地址輸入區塊 */
+.location-box { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.location-box label { font-size: 0.9rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+.input-group { display: flex; gap: 5px; }
+#currentAddress { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+#geoBtn { padding: 8px 12px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
 /* 設定面板樣式優化 */
 .controls { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.95rem; }
@@ -12,19 +19,15 @@ h1 { color: #333; margin-bottom: 20px; }
 .search-btn { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 5px; transition: background 0.3s; }
 .search-btn:hover { background: #2980b9; }
 
-.wheel-container { position: relative; margin: 20px auto 10px auto; width: 300px; height: 300px; /* margin-bottom 縮小，因為按鈕移出去了 */ }
+.wheel-container { position: relative; margin: 20px auto 10px auto; width: 300px; height: 300px; }
 @media (min-width: 400px) {
     .wheel-container { width: 400px; height: 400px; }
 }
 
-/* 確保 Canvas 響應式 */
 #wheel { width: 100%; height: 100%; border-radius: 50%; border: 5px solid #333; box-sizing: border-box; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-
 #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 40px; color: #e74c3c; z-index: 10; text-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 
-/* 修改：按鈕區域樣式 */
 .action-area { margin: 20px 0 30px 0; }
-
 #spinBtn { padding: 12px 40px; font-size: 1.3rem; background: #27ae60; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #219150; transition: transform 0.1s; }
 #spinBtn:active { transform: translateY(4px); box-shadow: none; }
 
