@@ -52,16 +52,13 @@ function fetchNearbyPlaces() {
             late_night: "宵夜 鹽酥雞"
         };
 
-        // 估算搜尋半徑 (因為 textSearch 還是需要半徑)
-        // 走路約 5km/h => 10分鐘約 800m -> 設定寬鬆一點 1.5倍
-        // 機車約 40km/h => 10分鐘約 6km -> 設定寬鬆一點
+        // 估算搜尋半徑
         let heuristicRadius = 1000; 
         if (transportMode === 'WALKING') {
             heuristicRadius = (maxTime / 60) * 5000 * 1.5; 
         } else {
             heuristicRadius = (maxTime / 60) * 40000 * 1.2; 
         }
-        // 限制最大半徑避免搜太遠 (Google 上限 50km)
         if(heuristicRadius > 5000) heuristicRadius = 5000; 
         if(heuristicRadius < 500) heuristicRadius = 500;
 
@@ -74,10 +71,8 @@ function fetchNearbyPlaces() {
         // 第一階段：先抓取地點
         service.textSearch(request, (results, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
-                // 為了節省 API 配額與速度，我們先取前 25 筆去算距離 (Distance Matrix 一次限制約 25 個目的地)
-                // 如果使用者想要 50 筆，可能需要分批，但為了效能我們先取前 25-30 筆最相關的來過濾
+                // 取前 25 筆去算距離
                 let candidates = results.slice(0, 25);
-                
                 btn.innerText = "計算真實路程中...";
                 
                 // 第二階段：計算真實距離與時間
@@ -96,8 +91,6 @@ function fetchNearbyPlaces() {
 // 計算真實距離 (使用 Distance Matrix API)
 function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userMaxCount) {
     const service = new google.maps.DistanceMatrixService();
-    
-    // 準備目的地座標陣列
     const destLocs = destinations.map(d => d.geometry.location);
 
     service.getDistanceMatrix({
@@ -113,12 +106,9 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
             for (let i = 0; i < destinations.length; i++) {
                 const element = results[i];
                 if (element.status === 'OK') {
-                    // element.duration.value 是秒數
                     const durationMins = Math.ceil(element.duration.value / 60);
                     
-                    // 篩選：只有在時間限制內的才加入
                     if (durationMins <= maxTimeLimit) {
-                        // 將距離資訊塞回 place 物件方便顯示
                         let place = destinations[i];
                         place.realDistanceText = element.distance.text;
                         place.realDurationText = element.duration.text;
@@ -128,8 +118,6 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
                 }
             }
 
-            // 依照時間排序 (最近的排前面) ? 或者隨機 ? 輪盤通常隨機比較好，但我們可以只截取前 N 個
-            // 這裡我們直接截取使用者想要的數量
             if (places.length > userMaxCount) {
                 places = places.slice(0, userMaxCount);
             }
@@ -138,13 +126,11 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
                 alert(`在 ${maxTimeLimit} 分鐘${mode === 'WALKING' ? '走路' : '車程'}範圍內找不到符合的店家，請放寬時間限制。`);
                 resetButtons();
             } else {
-                // 成功！繪製輪盤
                 drawWheel();
                 enableSpinButton(places.length);
             }
         } else {
             console.error("Distance Matrix 失敗:", status);
-            // 如果距離 API 失敗 (例如沒有開通權限)，則降級使用原本的直線距離結果
             places = destinations.slice(0, userMaxCount);
             drawWheel();
             enableSpinButton(places.length);
@@ -175,20 +161,23 @@ function enableSpinButton(count) {
     currentRotation = 0;
     canvas.style.transform = `rotate(0deg)`;
     document.getElementById('storeName').innerText = "點擊輪盤開始抉擇";
+    
+    // 重置評價欄位
+    const ratingEl = document.getElementById('storeRating');
+    if(ratingEl) ratingEl.innerText = "";
+    
     document.getElementById('storeAddress').innerText = "";
     document.getElementById('storeDistance').innerText = "";
     document.getElementById('menuLink').style.display = "none";
 }
 
-
-// 3. 繪製輪盤 (修正角度：12點鐘為起點)
+// 3. 繪製輪盤
 function drawWheel() {
     const numOptions = places.length;
     if (numOptions === 0) return;
     const arcSize = (2 * Math.PI) / numOptions;
     
     // 修正：將繪製起點設為 -90度 (12點鐘方向)
-    // 這樣 index 0 就會正對指針，邏輯最單純
     const startAngleOffset = -Math.PI / 2;
 
     ctx.clearRect(0, 0, 400, 400);
@@ -222,7 +211,7 @@ function drawWheel() {
     });
 }
 
-// 4. 旋轉邏輯 (修正指針判定)
+// 4. 旋轉邏輯
 document.getElementById('spinBtn').onclick = () => {
     if (places.length === 0) return;
     
@@ -240,25 +229,27 @@ document.getElementById('spinBtn').onclick = () => {
         const numOptions = places.length;
         const arcSize = 360 / numOptions;
         
-        // --- 修正後的指針數學 ---
-        // 輪盤順時針旋轉。
-        // 我們在繪製時，將 index 0 放在 12點鐘 (0度位置)。
-        // 假設轉了 R 度。
-        // 原本在 12點鐘的 index 0，現在跑到了 R 度 (順時針)。
-        // 指針永遠指著 12點鐘 (0度)。
-        // 所以指針底下壓著的，是原本在 "360 - (R % 360)" 位置的扇形。
-        
         const actualRotation = currentRotation % 360;
-        // 計算倒退的角度，找出哪個 index 目前在 0 度位置
         const winningIndex = Math.floor((360 - actualRotation) / arcSize) % numOptions;
         
         const winner = places[winningIndex];
 
         // 顯示結果
         document.getElementById('storeName').innerText = "就決定吃：" + winner.name;
+        
+        // 新增：顯示評價資訊
+        const ratingElement = document.getElementById('storeRating');
+        if (ratingElement) {
+            if (winner.rating) {
+                ratingElement.innerText = `⭐ ${winner.rating} (${winner.user_ratings_total || 0} 則評價)`;
+            } else {
+                ratingElement.innerText = "暫無評價資料";
+            }
+        }
+
         document.getElementById('storeAddress').innerText = winner.formatted_address;
         
-        // 顯示計算出的真實路程資訊
+        // 顯示路程資訊
         if (winner.realDurationText) {
              document.getElementById('storeDistance').innerText = 
                 `⏱️ 預估耗時：${winner.realDurationText} (${winner.realDistanceText})`;
@@ -278,5 +269,4 @@ document.getElementById('spinBtn').onclick = () => {
 // 初始化
 window.onload = () => {
     autoSelectMealType();
-    // 預設不自動搜尋，等使用者點擊
 };
