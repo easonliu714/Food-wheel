@@ -74,14 +74,14 @@ function startSearch(userLoc) {
     const keywords = {
         breakfast: "早餐店 早午餐",
         lunch: "餐廳 小吃 麵食 飯館 午餐 便當",
-        afternoon_tea: "飲料店 咖啡廳 下午茶 甜點 甜品 手搖 冰品",
+        afternoon_tea: "飲料店 咖啡廳 下午茶 甜點 甜品 手搖 冰品 茶飲",
         dinner: "餐廳 小吃 晚餐 火鍋",
         late_night: "宵夜 鹽酥雞 串燒 炸物",
         
         // 修改後的類別關鍵字
         noodles_rice: "麵食 飯食 麵店 飯館 牛肉麵 水餃 炒飯 丼飯 咖哩飯 拉麵 壽司 快炒", // 涵蓋中日台式
         western_steak: "牛排 義大利麵 披薩 漢堡 西式料理 美式餐廳 義式餐廳 鐵板燒 麵包 吃到飽", // 涵蓋西式排餐
-        dessert: "甜點 冰品 飲料店 豆花 蛋糕",
+        dessert: "甜點 冰品 飲料店 豆花 蛋糕 茶飲",
         all: "美食 餐廳 小吃" 
     };
 
