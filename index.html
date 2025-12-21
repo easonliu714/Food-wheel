@@ -11,28 +11,36 @@
         <h1>🍴 今天吃什麼？</h1>
         
         <div class="location-box">
-            <label for="currentAddress">📍 目前位置 (可手動修改)：</label>
+            <label for="currentAddress">📍 目前搜尋中心 (可修改)：</label>
             <div class="input-group">
                 <input type="text" id="currentAddress" placeholder="定位中..." value="">
-                <button id="geoBtn" onclick="initLocation()">📍 重抓</button>
+                <button id="geoBtn" onclick="handleSearch()">🔍 搜尋</button>
+            </div>
+            <div style="text-align: right; margin-top:5px;">
+                <button onclick="initLocation()" style="font-size: 0.8rem; padding: 5px 10px; cursor: pointer;">🎯 重抓定位</button>
             </div>
         </div>
 
         <div class="controls">
             <div class="setting-row">
                 <label for="mealType">類別：</label>
-                <select id="mealType">
+                <select id="mealType" onchange="updateKeywords()">
                     <option value="breakfast">早餐</option>
                     <option value="lunch">中午正餐</option>
                     <option value="afternoon_tea">下午茶飲</option>
                     <option value="dinner">晚餐</option>
                     <option value="late_night">宵夜</option>
                     
-                    <option value="noodles_rice">🍜 麵飯/壽司 (不限國別)</option>
-                    <option value="western_steak">🍽️ 排餐/西式 (牛排/漢堡/披薩)</option>
-                    <option value="dessert">🍧 甜點冰品 (豆花/蛋糕)</option>
+                    <option value="noodles_rice">🍜🍛 麵飯/小吃 (不限國別)</option>
+                    <option value="western_steak">🍽️🍔 排餐/西式 (牛排/漢堡)</option>
+                    <option value="dessert">🍧 🍰甜點冰品 (豆花/蛋糕)</option>
                     <option value="all">🌏 不限制 (所有美食)</option>
                 </select>
+            </div>
+
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
+                <label for="keywordInput" style="margin-bottom: 5px;">🔎 搜尋關鍵字 (空格分隔，可修改)：</label>
+                <input type="text" id="keywordInput" class="full-width-input" value="">
             </div>
 
             <div class="setting-row">
@@ -65,7 +73,7 @@
                 </select>
             </div>
 
-            <button onclick="handleSearch()" class="search-btn">🔄 搜尋附近店家</button>
+            <button onclick="handleSearch()" class="search-btn">🔄 開始搜尋店家</button>
         </div>
 
         <div class="wheel-container">
