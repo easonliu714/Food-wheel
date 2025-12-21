@@ -58,18 +58,22 @@
         <div class="wheel-container">
             <canvas id="wheel" width="400" height="400"></canvas>
             <div id="pointer">▼</div>
+        </div>
+        
+        <div class="action-area">
             <button id="spinBtn" disabled style="opacity: 0.5; cursor: not-allowed;">請先搜尋店家</button>
         </div>
 
         <div id="result">
             <h2 id="storeName">準備好就搜尋店家吧！</h2>
+            <p id="storeRating" style="font-weight: bold; color: #f39c12;"></p>
             <p id="storeAddress"></p>
             <p id="storeDistance" style="color: #666; font-size: 0.9em;"></p>
             <a id="menuLink" href="#" target="_blank" style="display:none;">📍 查看地圖與評價</a>
         </div>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqkQwPWMvU0hK7hQuVXVlDzcvr_LA9HWA&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places"></script>
     <script src="script.js"></script>
 </body>
 </html>
