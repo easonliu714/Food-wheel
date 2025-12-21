@@ -3,18 +3,21 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: fl
 
 h1 { color: #333; margin-bottom: 20px; }
 
-/* 地址輸入區塊 */
+/* 地址與關鍵字輸入區塊 */
 .location-box { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-.location-box label { font-size: 0.9rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+.location-box label { font-size: 0.9rem; font-weight: bold; color: #555; display: block; margin-bottom: 8px; }
 .input-group { display: flex; gap: 5px; }
-#currentAddress { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
-#geoBtn { padding: 8px 12px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; }
+#currentAddress { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+#geoBtn { padding: 0 15px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-/* 設定面板樣式優化 */
+/* 設定面板 */
 .controls { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
 .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.95rem; }
-.setting-row label { color: #666; font-weight: bold; }
+.setting-row label { color: #666; font-weight: bold; flex-shrink: 0; }
 .setting-row select { padding: 5px; border-radius: 5px; border: 1px solid #ddd; width: 65%; font-size: 1rem; }
+
+/* 全寬輸入框 (給關鍵字用) */
+.full-width-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem; box-sizing: border-box; background: #fafafa; }
 
 .search-btn { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 5px; font-size: 1rem; cursor: pointer; margin-top: 5px; transition: background 0.3s; }
 .search-btn:hover { background: #2980b9; }
