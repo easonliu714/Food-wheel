@@ -1,10 +1,24 @@
+
 let places = [];
 let currentRotation = 0;
-let userCoordinates = null; // 儲存目前的搜尋中心座標
+let userCoordinates = null; 
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 
-// 1. 初始化類別
+// 定義預設關鍵字字典
+const keywordDict = {
+    breakfast: "早餐 早午餐",
+    lunch: "餐廳 小吃 午餐",
+    afternoon_tea: "飲料 甜點 咖啡",
+    dinner: "餐廳 晚餐 火鍋",
+    late_night: "宵夜 鹽酥雞 炸物",
+    noodles_rice: "麵 飯 水餃 壽司", 
+    western_steak: "牛排 義大利麵 漢堡 披薩",
+    dessert: "冰品 豆花 甜點 蛋糕",
+    all: "美食 餐廳 小吃" 
+};
+
+// 1. 初始化與更新關鍵字
 function autoSelectMealType() {
     const hour = new Date().getHours();
     let type = 'lunch';
@@ -15,17 +29,29 @@ function autoSelectMealType() {
     else type = 'late_night';
     
     const mealSelect = document.getElementById('mealType');
-    if(mealSelect) mealSelect.value = type;
+    if(mealSelect) {
+        mealSelect.value = type;
+        updateKeywords(); // 初始化時同步更新輸入框
+    }
 }
 
-// 2. 初始化定位 (網頁載入時執行)
+// 當使用者切換類別時，更新輸入框
+function updateKeywords() {
+    const type = document.getElementById('mealType').value;
+    const input = document.getElementById('keywordInput');
+    if (keywordDict[type]) {
+        input.value = keywordDict[type];
+    }
+}
+
+// 2. 初始化定位
 function initLocation() {
-    if (typeof google === 'undefined') return; // API 尚未載入
+    if (typeof google === 'undefined') return;
     const addrInput = document.getElementById('currentAddress');
     addrInput.value = "定位中...";
 
     if (!navigator.geolocation) {
-        alert("不支援定位");
+        alert("瀏覽器不支援定位");
         return;
     }
 
@@ -35,134 +61,135 @@ function initLocation() {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            // 反查地址顯示給使用者看
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ location: userCoordinates }, (results, status) => {
                 if (status === "OK" && results[0]) {
-                    // 簡化地址顯示 (去除郵遞區號與國家)
                     let formatted = results[0].formatted_address;
                     formatted = formatted.replace(/^\d+\s*/, '').replace(/^台灣/, ''); 
                     addrInput.value = formatted;
                 } else {
-                    addrInput.value = `${userCoordinates.lat.toFixed(4)}, ${userCoordinates.lng.toFixed(4)}`;
+                    addrInput.value = `${userCoordinates.lat.toFixed(5)}, ${userCoordinates.lng.toFixed(5)}`;
                 }
             });
         },
         (error) => {
             console.error(error);
-            addrInput.value = "無法取得定位，請手動輸入地址";
+            addrInput.value = "";
+            addrInput.placeholder = "無法取得定位，請手動輸入地址";
         },
         { enableHighAccuracy: true }
     );
 }
 
-// 3. 處理搜尋點擊 (先確認地址是否被修改)
+// 3. 處理搜尋按鈕點擊
 function handleSearch() {
     const addrInput = document.getElementById('currentAddress').value;
+    const keywordsRaw = document.getElementById('keywordInput').value;
     
-    if (!addrInput) return alert("請輸入地址或按下「重抓」定位");
+    if (!addrInput) return alert("請輸入地址或按下「重抓定位」");
+    if (!keywordsRaw.trim()) return alert("請輸入至少一個關鍵字");
 
     const btn = document.querySelector('.search-btn');
     btn.innerText = "解析地址中...";
     btn.disabled = true;
 
-    // 將地址轉為座標
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ address: addrInput }, (results, status) => {
         if (status === "OK" && results[0]) {
-            userCoordinates = results[0].geometry.location; // 更新座標
-            startSearch(userCoordinates); // 開始搜尋店家
+            userCoordinates = results[0].geometry.location;
+            startSearch(userCoordinates, keywordsRaw);
         } else {
             alert("找不到此地址，請檢查輸入內容");
-            btn.innerText = "🔄 搜尋附近店家";
+            btn.innerText = "🔄 開始搜尋店家";
             btn.disabled = false;
         }
     });
 }
 
-// 4. 搜尋店家 (優化關鍵字與半徑)
-function startSearch(location) {
+// 4. 執行多重關鍵字搜尋 (核心修改)
+function startSearch(location, keywordsRaw) {
     const service = new google.maps.places.PlacesService(document.createElement('div'));
-    const type = document.getElementById('mealType').value;
     const transportMode = document.getElementById('transportMode').value;
     const maxTime = parseInt(document.getElementById('maxTime').value, 10);
     
-    // 【關鍵字大修】使用 OR 語法，並簡化關鍵字，讓 Google 模糊搜尋發揮作用
-    const keywords = {
-        breakfast: "早餐 OR 早午餐",
-        lunch: "餐廳 OR 小吃 OR 午餐",
-        afternoon_tea: "飲料 OR 甜點 OR 咖啡", // 簡化：飲料包含手搖，甜點包含蛋糕豆花
-        dinner: "餐廳 OR 晚餐 OR 火鍋",
-        late_night: "宵夜 OR 鹽酥雞 OR 炸物",
-        
-        noodles_rice: "麵 OR 飯 OR 水餃 OR 壽司", 
-        western_steak: "牛排 OR 義大利麵 OR 漢堡 OR 披薩",
-        dessert: "冰品 OR 豆花 OR 甜點",
-        all: "美食" // 最廣泛的搜尋
-    };
+    // 步驟 1: 拆分關鍵字 (以空格分隔)
+    // 例如 "麵 飯 水餃" -> ["麵", "飯", "水餃"]
+    const keywordList = keywordsRaw.split(/\s+/).filter(k => k.length > 0);
 
-    // 【半徑策略】直接設定 2000 公尺 (2公里)，確保抓到足夠的店
-    // 讓後續的 Distance Matrix 去負責過濾太遠的店，而不是一開始就過濾掉
-    const searchRadius = 2000; 
-
-    const request = {
-        location: location,
-        radius: searchRadius,
-        query: keywords[type] || "餐廳"
-    };
-
-    let allResults = [];
-    
-    // 顯示狀態
     const btn = document.querySelector('.search-btn');
-    btn.innerText = "搜尋店家中...";
+    btn.innerText = `搜尋 ${keywordList.length} 組關鍵字中...`;
 
-    service.textSearch(request, (results, status, pagination) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            allResults = allResults.concat(results);
+    // 步驟 2: 為每個關鍵字建立一個 Promise 請求
+    const searchPromises = keywordList.map(keyword => {
+        return new Promise((resolve) => {
+            const request = {
+                location: location,
+                rankBy: google.maps.places.RankBy.DISTANCE, // 強制依距離排序
+                keyword: keyword
+            };
             
-            // 抓取多頁 (最多 60 筆)
-            if (pagination && pagination.hasNextPage && allResults.length < 60) {
-                btn.innerText = `搜尋更多...(${allResults.length}筆)`;
-                setTimeout(() => pagination.nextPage(), 2000);
-            } else {
-                processResults(location, allResults, transportMode, maxTime);
-            }
-        } else if (allResults.length > 0) {
-            processResults(location, allResults, transportMode, maxTime);
-        } else {
-            console.error("API Error:", status);
-            alert("附近找不到符合的店家，請嘗試更換關鍵字或地址。");
+            // 每個關鍵字只抓第一頁 (20筆)，以免請求過多
+            service.nearbySearch(request, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                    resolve(results);
+                } else {
+                    resolve([]); // 失敗或沒結果則回傳空陣列
+                }
+            });
+        });
+    });
+
+    // 步驟 3: 等待所有搜尋完成並合併結果
+    Promise.all(searchPromises).then(resultsArray => {
+        // resultsArray 是一個陣列的陣列 [[麵店A, 麵店B], [飯館C], ...]
+        let combinedResults = [];
+        resultsArray.forEach(res => {
+            combinedResults = combinedResults.concat(res);
+        });
+
+        if (combinedResults.length === 0) {
+            alert("附近找不到符合任何關鍵字的店家。");
             resetButtons();
+            return;
         }
+
+        // 步驟 4: 進入過濾與排序流程
+        processResults(location, combinedResults, transportMode, maxTime);
+    }).catch(err => {
+        console.error(err);
+        alert("搜尋過程發生錯誤");
+        resetButtons();
     });
 }
 
-// 5. 過濾與排序
+// 5. 過濾、去重、計算距離
 function processResults(origin, results, mode, maxTime) {
     const btn = document.querySelector('.search-btn');
     const userMaxCount = parseInt(document.getElementById('resultCount').value, 10);
 
-    // 初步過濾：評分 3.5 以上 (若您覺得太嚴格，可以改成 3.0 或 0)
-    let filtered = results.filter(p => p.rating && p.rating >= 3.5 && p.user_ratings_total > 0);
-    
-    // 去除重複
+    // 去除重複 (因為不同關鍵字可能搜到同一家店)
     const uniqueIds = new Set();
-    filtered = filtered.filter(p => {
-        if(uniqueIds.has(p.place_id)) return false;
-        uniqueIds.add(p.place_id);
-        return true;
+    let filtered = [];
+    
+    results.forEach(p => {
+        // 先過濾評分 (3.5以上)
+        if (p.rating && p.rating >= 3.5 && p.user_ratings_total > 0) {
+            if (!uniqueIds.has(p.place_id)) {
+                uniqueIds.add(p.place_id);
+                filtered.push(p);
+            }
+        }
     });
 
     if (filtered.length === 0) {
-        alert("附近沒有 3.5 星以上的符合店家。");
+        alert("搜尋結果經評分篩選後無符合店家 (需 3.5 星以上)。");
         resetButtons();
         return;
     }
 
     btn.innerText = `計算路程時間 (共 ${filtered.length} 間)...`;
 
-    // 分批計算距離
+    // 分批計算距離 (Batch size 25)
     const batchSize = 25;
     const batches = [];
     for (let i = 0; i < filtered.length; i += batchSize) {
@@ -173,17 +200,16 @@ function processResults(origin, results, mode, maxTime) {
         .then(resultsArray => {
             let validPlaces = [].concat(...resultsArray);
 
-            // 過濾超時店家
+            // 過濾：剔除超時店家
             validPlaces = validPlaces.filter(p => p.realDurationMins <= maxTime);
 
             if (validPlaces.length === 0) {
-                alert(`在 ${maxTime} 分鐘範圍內找不到符合條件的店家。\n(已搜尋半徑 2公里內的店家，但走路時間都超過設定值)`);
+                alert(`在 ${maxTime} 分鐘範圍內找不到符合店家。\n(已搜尋最近且評分合格的店家，但距離太遠)`);
                 resetButtons();
                 return;
             }
 
-            // 排序：距離優先 (Google Maps 風格) 或是 評分優先？
-            // 這裡混合權重：評分高且距離近的排前面 (簡單做法：先按評分排)
+            // 排序：評分優先
             validPlaces.sort((a, b) => b.rating - a.rating);
 
             places = validPlaces.slice(0, userMaxCount);
@@ -199,11 +225,10 @@ function processResults(origin, results, mode, maxTime) {
         });
 }
 
-// Distance Matrix
+// Distance Matrix 封裝
 function getDistances(origin, destinations, mode) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const service = new google.maps.DistanceMatrixService();
-        // 如果 origin 是 Google LatLng 物件，直接用；如果是 {lat, lng} 也可以
         const destLocs = destinations.map(d => d.geometry.location);
 
         service.getDistanceMatrix({
@@ -233,11 +258,10 @@ function getDistances(origin, destinations, mode) {
     });
 }
 
-// UI Reset
 function resetButtons() {
     const btn = document.querySelector('.search-btn');
     if(btn) {
-        btn.innerText = "🔄 搜尋附近店家";
+        btn.innerText = "🔄 開始搜尋店家";
         btn.disabled = false;
     }
     const spinBtn = document.getElementById('spinBtn');
@@ -348,5 +372,5 @@ document.getElementById('spinBtn').onclick = () => {
 
 window.onload = () => {
     autoSelectMealType();
-    initLocation(); // 初始化定位
+    initLocation();
 };
