@@ -3,7 +3,7 @@ let currentRotation = 0;
 const canvas = document.getElementById('wheel');
 const ctx = canvas.getContext('2d');
 
-// 1. 根據時間初始化類別
+// 1. 根據時間初始化類別 (預設仍保留時間判斷，但使用者可以手動切換到新類別)
 function autoSelectMealType() {
     const hour = new Date().getHours();
     let type = 'lunch';
@@ -17,12 +17,12 @@ function autoSelectMealType() {
     if(mealSelect) mealSelect.value = type;
 }
 
-// 2. 獲取定位與搜尋店家 (含真實路程計算)
+// 2. 獲取定位與搜尋店家
 function fetchNearbyPlaces() {
-    // 【安全檢查 1】確認 Google API 是否載入
+    // 安全檢查：確認 Google API 是否載入
     if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-        alert("錯誤：Google Maps API 未成功載入。\n請檢查 index.html 中的 API Key 是否正確，以及網路是否連線。");
-        return; // 直接結束，不鎖按鈕
+        alert("錯誤：Google Maps API 未成功載入。請檢查 API Key 是否正確或網路連線。");
+        return;
     }
 
     if (!navigator.geolocation) return alert("您的瀏覽器不支援定位功能");
@@ -30,7 +30,7 @@ function fetchNearbyPlaces() {
     const btn = document.querySelector('.search-btn');
     const spinBtn = document.getElementById('spinBtn');
     
-    // 鎖定按鈕狀態
+    // UI 鎖定
     btn.innerText = "定位與搜尋中...";
     btn.disabled = true;
     spinBtn.disabled = true;
@@ -38,7 +38,6 @@ function fetchNearbyPlaces() {
     spinBtn.style.cursor = "not-allowed";
     spinBtn.innerText = "資料讀取中...";
 
-    // 【設定定位超時】避免無限等待 (設定 10 秒)
     const geoOptions = {
         enableHighAccuracy: true,
         timeout: 10000, 
@@ -47,7 +46,6 @@ function fetchNearbyPlaces() {
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            // 定位成功，開始執行搜尋
             try {
                 const userLoc = {
                     lat: position.coords.latitude,
@@ -61,14 +59,10 @@ function fetchNearbyPlaces() {
             }
         }, 
         (error) => {
-            // 定位失敗的處理
             console.error("Geolocation Error:", error);
             let msg = "無法取得定位";
-            switch(error.code) {
-                case error.PERMISSION_DENIED: msg = "您拒絕了定位權限，請允許後重試。"; break;
-                case error.POSITION_UNAVAILABLE: msg = "無法偵測目前位置 (GPS 訊號弱)。"; break;
-                case error.TIMEOUT: msg = "定位逾時 (超過 10 秒)，請檢查網路或 GPS。"; break;
-            }
+            if(error.code === error.PERMISSION_DENIED) msg = "您拒絕了定位權限。";
+            if(error.code === error.TIMEOUT) msg = "定位逾時，請檢查 GPS 訊號。";
             alert(msg);
             resetButtons();
         },
@@ -76,22 +70,40 @@ function fetchNearbyPlaces() {
     );
 }
 
-// 拆分出來的搜尋邏輯
+// 拆分出的搜尋邏輯 (包含新類別關鍵字)
 function startSearch(userLoc) {
     const service = new google.maps.places.PlacesService(document.createElement('div'));
-    const type = document.getElementById('mealType').value;
-    const transportMode = document.getElementById('transportMode').value;
-    const maxTime = parseInt(document.getElementById('maxTime').value, 10);
-    const userMaxCount = parseInt(document.getElementById('resultCount').value, 10);
+    
+    // 取得使用者選擇
+    const typeElement = document.getElementById('mealType');
+    const type = typeElement ? typeElement.value : 'all'; // 防呆
+    
+    const transportModeElement = document.getElementById('transportMode');
+    const transportMode = transportModeElement ? transportModeElement.value : 'WALKING';
 
+    const maxTimeElement = document.getElementById('maxTime');
+    const maxTime = maxTimeElement ? parseInt(maxTimeElement.value, 10) : 10;
+    
+    const countElement = document.getElementById('resultCount');
+    const userMaxCount = countElement ? parseInt(countElement.value, 10) : 20;
+
+    // --- 核心修改：新增類別的關鍵字對照表 ---
     const keywords = {
-        breakfast: "早餐店",
-        lunch: "餐廳",
-        afternoon_tea: "飲料店 咖啡廳",
-        dinner: "餐廳 晚餐",
-        late_night: "宵夜 鹽酥雞"
+        //原本的時段類
+        breakfast: "早餐店 早午餐",
+        lunch: "餐廳 午餐 便當",
+        afternoon_tea: "飲料店 咖啡廳 下午茶 甜點",
+        dinner: "餐廳 晚餐 火鍋",
+        late_night: "宵夜 鹽酥雞 串燒",
+        
+        // 新增的類別
+        chinese: "中式料理 麵店 飯館 水餃 小吃",
+        western: "西式料理 義大利麵 漢堡 牛排",
+        dessert: "甜點 冰品 飲料店 豆花",
+        all: "美食 餐廳 小吃"  // 不限制時，用廣泛關鍵字搜尋
     };
 
+    // 計算搜尋半徑 (Heuristic Radius)
     let heuristicRadius = 1000; 
     if (transportMode === 'WALKING') {
         heuristicRadius = (maxTime / 60) * 5000 * 1.5; 
@@ -104,7 +116,7 @@ function startSearch(userLoc) {
     const request = {
         location: userLoc,
         radius: heuristicRadius,
-        query: keywords[type]
+        query: keywords[type] || "餐廳" // 預設值
     };
 
     service.textSearch(request, (results, status) => {
@@ -112,21 +124,18 @@ function startSearch(userLoc) {
             // 取前 25 筆去算距離
             let candidates = results.slice(0, 25);
             
-            // 更新 UI 狀態
             const btn = document.querySelector('.search-btn');
-            btn.innerText = "計算真實路程中...";
+            if(btn) btn.innerText = "計算真實路程中...";
             
-            // 前往計算距離
             calculateActualDistance(userLoc, candidates, transportMode, maxTime, userMaxCount);
         } else {
-            // 【錯誤處理】如果 API 回傳非 OK 狀態
             console.error("Places API Failed:", status);
             if (status === "ZERO_RESULTS") {
-                alert("抱歉，附近 2km 內找不到符合關鍵字的店家。");
-            } else if (status === "REQUEST_DENIED" || status === "OVER_QUERY_LIMIT") {
-                alert("API 錯誤：請檢查您的 API Key 是否正確且已啟用 Places API。\n狀態碼：" + status);
+                alert("附近找不到符合該類別的店家，請嘗試放寬條件。");
+            } else if (status === "OVER_QUERY_LIMIT") {
+                alert("搜尋太頻繁，請稍等幾秒後再試。");
             } else {
-                alert("搜尋失敗，Google 回傳狀態：" + status);
+                alert("搜尋失敗，狀態碼：" + status);
             }
             resetButtons();
         }
@@ -135,9 +144,7 @@ function startSearch(userLoc) {
 
 // 計算真實距離
 function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userMaxCount) {
-    // 【安全檢查 2】防止空陣列導致 crash
     if (!destinations || destinations.length === 0) {
-        alert("無店家資料可計算距離。");
         resetButtons();
         return;
     }
@@ -157,7 +164,6 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
 
             for (let i = 0; i < destinations.length; i++) {
                 const element = results[i];
-                // 必須確認 element 狀態也是 OK (有時候特定地點會計算失敗)
                 if (element.status === 'OK') {
                     const durationMins = Math.ceil(element.duration.value / 60);
                     
@@ -171,13 +177,12 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
                 }
             }
 
-            // 截斷數量
             if (places.length > userMaxCount) {
                 places = places.slice(0, userMaxCount);
             }
 
             if (places.length === 0) {
-                alert(`在 ${maxTimeLimit} 分鐘${mode === 'WALKING' ? '走路' : '車程'}範圍內找不到符合的店家。\n(API 已過濾掉 ${destinations.length} 間太遠的店)`);
+                alert(`在 ${maxTimeLimit} 分鐘${mode === 'WALKING' ? '走路' : '車程'}範圍內找不到符合的店家。\n(可能因 Google 優先回傳遠處熱門店，導致近處店家被排擠)`);
                 resetButtons();
             } else {
                 drawWheel();
@@ -185,41 +190,48 @@ function calculateActualDistance(origin, destinations, mode, maxTimeLimit, userM
             }
         } else {
             console.error("Distance Matrix Failed:", status);
-            // 降級處理：如果距離 API 失敗，直接用原本搜尋結果，不計算時間
+            // 降級處理：直接用直線搜尋結果
             places = destinations.slice(0, userMaxCount);
             drawWheel();
             enableSpinButton(places.length);
-            alert("注意：路程計算 API 失敗 (可能是 Key 權限不足)，目前顯示直線搜尋結果。");
+            alert("注意：路程計算失敗 (API 限制或連線問題)，目前顯示直線搜尋結果。");
         }
     });
 }
 
 function resetButtons() {
     const btn = document.querySelector('.search-btn');
-    btn.innerText = "🔄 搜尋附近店家";
-    btn.disabled = false;
+    if(btn) {
+        btn.innerText = "🔄 搜尋附近店家";
+        btn.disabled = false;
+    }
     
-    // 如果失敗，也要把抽籤按鈕重置回不可用狀態
     const spinBtn = document.getElementById('spinBtn');
-    spinBtn.disabled = true;
-    spinBtn.style.opacity = "0.5";
-    spinBtn.style.cursor = "not-allowed";
-    spinBtn.innerText = "請先搜尋店家";
+    if(spinBtn) {
+        spinBtn.disabled = true;
+        spinBtn.style.opacity = "0.5";
+        spinBtn.style.cursor = "not-allowed";
+        spinBtn.innerText = "請先搜尋店家";
+    }
 }
 
 function enableSpinButton(count) {
     const btn = document.querySelector('.search-btn');
     const spinBtn = document.getElementById('spinBtn');
     
-    btn.innerText = `搜尋完成 (共 ${count} 間)`;
-    btn.disabled = false;
+    if(btn) {
+        btn.innerText = `搜尋完成 (共 ${count} 間)`;
+        btn.disabled = false;
+    }
     
-    spinBtn.disabled = false;
-    spinBtn.style.opacity = "1";
-    spinBtn.style.cursor = "pointer";
-    spinBtn.innerText = "開始抽籤";
+    if(spinBtn) {
+        spinBtn.disabled = false;
+        spinBtn.style.opacity = "1";
+        spinBtn.style.cursor = "pointer";
+        spinBtn.innerText = "開始抽籤";
+    }
 
-    // 重置輪盤
+    // 重置畫面
     currentRotation = 0;
     canvas.style.transform = `rotate(0deg)`;
     document.getElementById('storeName').innerText = "點擊輪盤開始抉擇";
@@ -232,7 +244,7 @@ function enableSpinButton(count) {
     document.getElementById('menuLink').style.display = "none";
 }
 
-// 3. 繪製輪盤
+// 繪製輪盤
 function drawWheel() {
     const numOptions = places.length;
     if (numOptions === 0) return;
@@ -251,7 +263,6 @@ function drawWheel() {
         ctx.fill();
         ctx.stroke();
 
-        // 寫字
         ctx.save();
         ctx.translate(200, 200);
         ctx.rotate(angle + arcSize / 2);
@@ -270,7 +281,7 @@ function drawWheel() {
     });
 }
 
-// 4. 旋轉邏輯
+// 旋轉與結果判定
 document.getElementById('spinBtn').onclick = () => {
     if (places.length === 0) return;
     
