@@ -1,0 +1,38 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # 或是 master，請確認您的主分支名稱
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject API Key
+        # 使用 sed 指令將 index.html 中的佔位符替換為 GitHub Secrets 中的真實 Key
+        run: |
+          sed -i 's/GOOGLE_MAPS_API_KEY_PLACEHOLDER/${{ secrets.GOOGLE_MAPS_API_KEY }}/g' index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
