@@ -12,13 +12,18 @@
         
         <div class="controls">
             <div class="setting-row">
-                <label for="mealType">時段：</label>
+                <label for="mealType">類別：</label>
                 <select id="mealType">
                     <option value="breakfast">早餐</option>
                     <option value="lunch">中午正餐</option>
                     <option value="afternoon_tea">下午茶飲</option>
                     <option value="dinner">晚餐</option>
                     <option value="late_night">宵夜</option>
+                    
+                    <option value="chinese">🇨🇳 中式料理 (麵/飯)</option>
+                    <option value="western">🇺🇸 西式料理 (意麵/漢堡)</option>
+                    <option value="dessert">🍧 甜點冰品飲料</option>
+                    <option value="all">🌏 不限制 (所有美食)</option>
                 </select>
             </div>
 
@@ -72,6 +77,7 @@
             <a id="menuLink" href="#" target="_blank" style="display:none;">📍 查看地圖與評價</a>
         </div>
     </div>
+
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrOD6ASt4TOLdZB5mDyOBHEpvCyb2YgUg&libraries=places"></script>
     <script src="script.js"></script>
 </body>
