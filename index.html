@@ -10,6 +10,14 @@
     <div class="container">
         <h1>🍴 今天吃什麼？</h1>
         
+        <div class="location-box">
+            <label for="currentAddress">📍 目前位置 (可手動修改)：</label>
+            <div class="input-group">
+                <input type="text" id="currentAddress" placeholder="定位中..." value="">
+                <button id="geoBtn" onclick="initLocation()">📍 重抓</button>
+            </div>
+        </div>
+
         <div class="controls">
             <div class="setting-row">
                 <label for="mealType">類別：</label>
@@ -20,9 +28,9 @@
                     <option value="dinner">晚餐</option>
                     <option value="late_night">宵夜</option>
                     
-                    <option value="noodles_rice">🍜🍲 麵飯料理 (麵食/飯類/壽司)</option>
-                    <option value="western_steak">🍽️ 🍔 西式/排餐 (牛排/義麵/披薩/漢堡)</option>
-                    <option value="dessert">🍧 甜點冰品飲料</option>
+                    <option value="noodles_rice">🍜 麵飯/壽司 (不限國別)</option>
+                    <option value="western_steak">🍽️ 排餐/西式 (牛排/漢堡/披薩)</option>
+                    <option value="dessert">🍧 甜點冰品 (豆花/蛋糕)</option>
                     <option value="all">🌏 不限制 (所有美食)</option>
                 </select>
             </div>
@@ -57,7 +65,7 @@
                 </select>
             </div>
 
-            <button onclick="fetchNearbyPlaces()" class="search-btn">🔄 搜尋附近店家</button>
+            <button onclick="handleSearch()" class="search-btn">🔄 搜尋附近店家</button>
         </div>
 
         <div class="wheel-container">
@@ -78,7 +86,7 @@
         </div>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrOD6ASt4TOLdZB5mDyOBHEpvCyb2YgUg&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCrOD6ASt4TOLdZB5mDyOBHEpvCyb2YgUg&libraries=places,geometry"></script>
     <script src="script.js"></script>
 </body>
 </html>
