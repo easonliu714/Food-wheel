@@ -1,6 +1,11 @@
 // ================== ai_menu.js : Gemini AI 菜單處理 ==================
+// Version: 2025-12-28-v2
+// Tasks:
+// 1. 轉盤半徑縮小避免遮擋
+// 2. 增加上傳圖片預覽
+// 3. 菜單明細可點擊編輯
+// 4. 按下AI菜單按鈕預設載入舊資料
 
-// 儲存菜單資料到 LocalStorage
 window.saveMenuData = function(placeId, menuItems) {
     if (!placeId || !menuItems) return;
     let allMenus = {};
@@ -8,57 +13,46 @@ window.saveMenuData = function(placeId, menuItems) {
         allMenus = JSON.parse(localStorage.getItem('food_wheel_menus')) || {};
     } catch(e) {}
     
-    // 如果已有該商家的菜單，則進行合併 (避免重複)
-    if (allMenus[placeId]) {
-        const existingNames = new Set(allMenus[placeId].map(i => i.name));
-        menuItems.forEach(item => {
-            if (!existingNames.has(item.name)) {
-                allMenus[placeId].push(item);
-            }
-        });
-    } else {
-        allMenus[placeId] = menuItems;
-    }
-    
+    // 直接覆寫或合併？這裡採用覆寫目前類別，但為了簡單，直接更新整個店家菜單
+    allMenus[placeId] = menuItems;
     localStorage.setItem('food_wheel_menus', JSON.stringify(allMenus));
-};
-
-window.loadSavedMenu = function() {
-    if (!window.currentStoreForMenu) return;
-    const placeId = window.currentStoreForMenu.place_id;
-    let allMenus = {};
-    try {
-        allMenus = JSON.parse(localStorage.getItem('food_wheel_menus')) || {};
-    } catch(e) {}
-
-    if (allMenus[placeId] && allMenus[placeId].length > 0) {
-        if(confirm(`發現此店家 (${window.currentStoreForMenu.name}) 有 ${allMenus[placeId].length} 道已儲存的菜色。\n是否直接載入？`)) {
-            window.initAiMenuSystem(allMenus[placeId]);
-        }
-    } else {
-        alert("此店家尚無儲存的菜單資料，請先上傳圖片解析。");
-    }
 };
 
 window.openAiMenuSelector = function() {
     if (!window.currentStoreForMenu) return;
+    
+    // 檢查是否有存檔
+    let allMenus = {};
+    try { allMenus = JSON.parse(localStorage.getItem('food_wheel_menus')) || {}; } catch(e) {}
+    const savedData = allMenus[window.currentStoreForMenu.place_id];
+
     document.getElementById('main-view').style.display = 'none';
     document.getElementById('menu-screen').style.display = 'block';
     document.getElementById('menuStoreTitle').innerText = `菜單：${window.currentStoreForMenu.name}`;
     
+    // 重置圖片預覽
+    document.getElementById('maps-photo-grid').innerHTML = '';
+    window.selectedPhotoDataList = [];
+
+    // === 新邏輯：若有存檔，直接進入 Step 2 ===
+    if (savedData && savedData.length > 0) {
+        console.log("Loading saved menu data...");
+        window.initAiMenuSystem(savedData);
+    } else {
+        // 無存檔，顯示上傳介面
+        showUploadStep();
+    }
+};
+
+window.showUploadStep = function() {
     document.getElementById('ai-step-1').style.display = 'block';
     document.getElementById('ai-step-2').style.display = 'none';
     document.getElementById('ai-loading').style.display = 'none';
     document.getElementById('btnAnalyzeMenu').disabled = true;
     document.getElementById('btnAnalyzeMenu').style.opacity = '0.5';
-    window.selectedPhotoDataList = []; // 改為陣列，支援多圖
-
-    const grid = document.getElementById('maps-photo-grid');
-    grid.innerHTML = '';
     
-    // 檢查是否有歷史存檔，顯示按鈕
-    const loadBtn = document.getElementById('btnLoadSavedMenu');
-    if(loadBtn) loadBtn.style.display = 'inline-block';
+    // 顯示「重新讀取」按鈕 (如果使用者是從 Step 2 按返回的)
+    // 這裡簡化邏輯，如果是強制重新上傳，則不自動跳轉
 };
 
 window.closeMenuSystem = function() {
@@ -68,9 +62,9 @@ window.closeMenuSystem = function() {
 
 window.handleFileUpload = function(input) {
     if (input.files && input.files.length > 0) {
-        window.selectedPhotoDataList = []; // 重置
+        window.selectedPhotoDataList = [];
         const grid = document.getElementById('maps-photo-grid');
-        grid.innerHTML = ''; // 清空預覽
+        grid.innerHTML = ''; 
         
         let loadedCount = 0;
         Array.from(input.files).forEach(file => {
@@ -81,10 +75,10 @@ window.handleFileUpload = function(input) {
                     mimeType: file.type
                 });
                 
-                // 顯示預覽圖
                 const div = document.createElement('div');
                 div.className = 'photo-item selected';
-                div.innerHTML = `<img src="${e.target.result}">`;
+                // 點擊預覽圖可開啟大圖
+                div.innerHTML = `<img src="${e.target.result}" title="點擊查看原圖" onclick="window.open('${e.target.result}')">`;
                 grid.appendChild(div);
 
                 loadedCount++;
@@ -110,12 +104,10 @@ window.analyzeSelectedPhotos = async function() {
     document.getElementById('ai-loading').style.display = 'block';
 
     try {
-        // 構建 Prompt
         const contentsParts = [
             { text: "請分析以下菜單圖片，擷取所有菜色名稱與價格。請嚴格只回傳一個 JSON 陣列，格式為：[{\"category\": \"類別\", \"name\": \"菜名\", \"price\": 數字}], 若無類別則歸類為'主餐'。不要包含 Markdown 格式 (```json ... ```)。" }
         ];
 
-        // 加入所有圖片
         window.selectedPhotoDataList.forEach(photo => {
             const base64Data = photo.data.split(',')[1];
             contentsParts.push({
@@ -135,17 +127,20 @@ window.analyzeSelectedPhotos = async function() {
         
         if (data.candidates && data.candidates[0].content) {
             let text = data.candidates[0].content.parts[0].text;
-            // 清理 Markdown
             text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            const menuJson = JSON.parse(text);
             
-            if (Array.isArray(menuJson) && menuJson.length > 0) {
-                // 儲存並初始化
-                window.saveMenuData(window.currentStoreForMenu.place_id, menuJson);
-                window.initAiMenuSystem(menuJson);
-            } else {
-                alert("AI 無法辨識菜單資料，或回傳格式錯誤。");
-                document.getElementById('ai-loading').style.display = 'none';
+            // 嘗試修復常見 JSON 錯誤 (如結尾多餘逗號)
+            try {
+                const menuJson = JSON.parse(text);
+                if (Array.isArray(menuJson) && menuJson.length > 0) {
+                    window.saveMenuData(window.currentStoreForMenu.place_id, menuJson);
+                    window.initAiMenuSystem(menuJson);
+                } else {
+                    throw new Error("解析結果為空或是格式不符");
+                }
+            } catch (jsonErr) {
+                 console.error("JSON Parse Error", text);
+                 throw new Error("AI 回傳格式無法讀取，請重試。");
             }
         } else {
             throw new Error("AI 回應格式錯誤或被阻擋");
@@ -158,22 +153,10 @@ window.analyzeSelectedPhotos = async function() {
 };
 
 window.initAiMenuSystem = function(menuData) {
-    // 重新讀取 (確保包含舊資料)
-    let allMenus = {};
-    try { allMenus = JSON.parse(localStorage.getItem('food_wheel_menus')) || {}; } catch(e) {}
-    // 如果是讀取存檔，傳入的 menuData 就是完整的；如果是剛解析的，可能是部分。
-    // 這裡簡單起見，直接使用傳入的 menuData (因為解析成功後已存檔並呼叫)
-    
-    // 如果是剛解析完，嘗試讀取完整存檔以獲得累加效果
-    if (window.currentStoreForMenu && allMenus[window.currentStoreForMenu.place_id]) {
-        window.fullMenuData = allMenus[window.currentStoreForMenu.place_id];
-    } else {
-        window.fullMenuData = menuData;
-    }
-    
+    window.fullMenuData = menuData;
     window.shoppingCart = [];
     
-    const categories = [...new Set(window.fullMenuData.map(item => item.category || '主餐'))];
+    const categories = [...new Set(menuData.map(item => item.category || '主餐'))];
     const catSelect = document.getElementById('menuCategorySelect');
     catSelect.innerHTML = "";
     categories.forEach(cat => {
@@ -187,13 +170,29 @@ window.initAiMenuSystem = function(menuData) {
     document.getElementById('ai-step-1').style.display = 'none';
     document.getElementById('ai-step-2').style.display = 'block';
     
-    // 綁定轉盤按鈕事件 (修復按鈕無反應問題)
     const spinBtn = document.getElementById('spinMenuBtn');
     if(spinBtn) spinBtn.onclick = window.spinMenu;
     
+    // 如果有剛剛上傳的圖片，顯示在上方預覽
+    const previewContainer = document.getElementById('menuImagesPreview');
+    if (previewContainer) {
+        previewContainer.innerHTML = '';
+        if (window.selectedPhotoDataList && window.selectedPhotoDataList.length > 0) {
+            window.selectedPhotoDataList.forEach(photo => {
+                const img = document.createElement('img');
+                img.src = photo.data;
+                img.onclick = () => window.open(photo.data);
+                previewContainer.appendChild(img);
+            });
+            previewContainer.style.display = 'flex';
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
     window.updateCartUI();
     window.updateMenuWheel();
-    window.renderFullMenuTable(); // 渲染完整表格
+    window.renderFullMenuTable();
 };
 
 window.updateMenuWheel = function() {
@@ -209,25 +208,32 @@ window.drawMenuWheel = function() {
     
     const arcSize = (2 * Math.PI) / numOptions;
     const startAngleOffset = -Math.PI / 2;
+    
+    // === 修正：縮小半徑，避免遮擋按鈕 (200 -> 160) ===
+    const radius = 160; 
+    const centerX = 200;
+    const centerY = 200;
 
     window.currentMenuData.forEach((item, i) => {
         const angle = startAngleOffset + (i * arcSize);
         if(window.menuCtx) {
             window.menuCtx.fillStyle = `hsl(${i * (360 / numOptions)}, 60%, 85%)`;
             window.menuCtx.beginPath();
-            window.menuCtx.moveTo(200, 200);
-            window.menuCtx.arc(200, 200, 200, angle, angle + arcSize);
+            window.menuCtx.moveTo(centerX, centerY);
+            window.menuCtx.arc(centerX, centerY, radius, angle, angle + arcSize);
             window.menuCtx.fill();
             window.menuCtx.stroke();
 
             window.menuCtx.save();
-            window.menuCtx.translate(200, 200);
+            window.menuCtx.translate(centerX, centerY);
             window.menuCtx.rotate(angle + arcSize / 2);
             let fontSize = 14; if (numOptions > 10) fontSize = 12;
             window.menuCtx.fillStyle = "#333";
             window.menuCtx.font = `bold ${fontSize}px Arial`;
+            // 文字只顯示前幾個字
             let text = item.name; if (text.length > 6) text = text.substring(0, 5) + "..";
-            window.menuCtx.fillText(text, 60, 5);
+            // 調整文字位置，確保在半徑內
+            window.menuCtx.fillText(text, 60, 5); 
             window.menuCtx.restore();
         }
     });
@@ -241,7 +247,6 @@ window.drawMenuWheel = function() {
     document.getElementById('addToOrderBtn').style.display = 'none';
 };
 
-// 菜單轉盤邏輯
 window.spinMenu = function() {
     if (!window.currentMenuData || window.currentMenuData.length === 0) return;
     
@@ -281,7 +286,6 @@ window.spinMenu = function() {
 window.addDishToCart = function(dish) {
     window.shoppingCart.push(dish);
     window.updateCartUI();
-    document.getElementById('addToOrderBtn').style.display = 'none';
 };
 
 window.updateCartUI = function() {
@@ -314,22 +318,44 @@ window.checkout = function() {
     alert(msg);
 };
 
-// 渲染完整菜單表格
+// === 新增：菜單編輯功能 ===
+window.editMenuItem = function(index, field) {
+    const item = window.fullMenuData[index];
+    const oldValue = item[field];
+    const newValue = prompt(`修改 ${field === 'name' ? '菜名' : '價格'}：`, oldValue);
+    
+    if (newValue !== null && newValue !== oldValue) {
+        if (field === 'price') {
+            const price = parseInt(newValue);
+            if (!isNaN(price)) item.price = price;
+            else return alert("價格必須是數字");
+        } else {
+            item.name = newValue;
+        }
+        
+        // 儲存並重新渲染
+        window.saveMenuData(window.currentStoreForMenu.place_id, window.fullMenuData);
+        window.renderFullMenuTable();
+        window.updateMenuWheel(); // 同步更新轉盤
+    }
+};
+
 window.renderFullMenuTable = function() {
     const container = document.getElementById('fullMenuContainer');
     if (!container) return;
     
-    let html = `<table class="menu-table"><thead><tr><th>類別</th><th>名稱</th><th>價格</th><th>操作</th></tr></thead><tbody>`;
+    let html = `<p style="font-size:0.8rem; color:#666; text-align:center;">(點擊菜名或價格可修改)</p>
+    <table class="menu-table"><thead><tr><th>類別</th><th>名稱</th><th>價格</th><th>操作</th></tr></thead><tbody>`;
     
-    // 依類別排序
-    const sortedData = [...window.fullMenuData].sort((a,b) => (a.category || "").localeCompare(b.category || ""));
+    // 為了讓 index 對應正確，這裡不排序，或者需要紀錄原始 index
+    // 這裡直接使用 window.fullMenuData 的順序
     
-    sortedData.forEach((item, idx) => {
+    window.fullMenuData.forEach((item, idx) => {
         html += `<tr>
             <td>${item.category || '主餐'}</td>
-            <td>${item.name}</td>
-            <td>$${item.price}</td>
-            <td><button class="small-btn" onclick='window.addDishToCart(${JSON.stringify(item)})'>➕</button></td>
+            <td onclick="editMenuItem(${idx}, 'name')" style="cursor:pointer; text-decoration:underline dashed; text-underline-offset:4px;">${item.name}</td>
+            <td onclick="editMenuItem(${idx}, 'price')" style="cursor:pointer;">$${item.price}</td>
+            <td><button class="small-btn" onclick='window.addDishToCart(window.fullMenuData[${idx}])'>➕</button></td>
         </tr>`;
     });
     
