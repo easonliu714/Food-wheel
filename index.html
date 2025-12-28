@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>今天吃什麼？(公開版)</title>
     <link rel="stylesheet" href="style.css">
-</head>
+    </head>
 <body>
 
     <div id="setup-screen" class="container setup-container">
@@ -140,11 +140,15 @@
                     <div class="action-area">
                         <button id="spinBtn" disabled style="opacity: 0.5;">請先搜尋店家</button>
                     </div>
+                    
                     <div id="result">
                         <h2 id="storeName">準備好就搜尋店家吧！</h2>
                         <p id="storeRating" style="font-weight: bold; color: #f39c12;"></p>
                         <p id="storeAddress"></p>
-                        <p id="storeDistance" style="color: #666; font-size: 0.9em;"></p>
+                        <p id="storePhone"></p>
+                        <p id="storeStatus"></p>
+                        <p id="storeDistance"></p>
+                        
                         <p id="userPersonalRating" style="font-size: 0.9rem; margin: 5px 0; min-height: 20px;"></p>
 
                         <div class="action-buttons-grid">
@@ -168,6 +172,7 @@
                 <button onclick="closeMenuSystem()" class="header-btn">⬅️ 返回店家</button>
                 <h1 id="menuStoreTitle" style="font-size: 1.2rem;">AI 智能菜單</h1>
             </div>
+            
             <div id="ai-step-1" class="menu-layout">
                 <h3>📷 上傳菜單圖片 (可多選)</h3>
                 <div class="upload-area">
@@ -178,7 +183,10 @@
                 <div id="maps-photo-grid" class="photo-grid"></div>
                 <button id="btnAnalyzeMenu" onclick="analyzeSelectedPhotos()" class="search-btn" disabled style="margin-top:20px; opacity:0.5;">🤖 開始 AI 解析</button>
             </div>
+            
             <div id="ai-step-2" class="menu-layout" style="display:none;">
+                <div id="menuImagesPreview" style="display:none;"></div>
+                
                 <div class="menu-controls"><label>📂 類別：</label><select id="menuCategorySelect" onchange="updateMenuWheel()"></select></div>
                 <div class="wheel-container"><canvas id="menuWheel" width="400" height="400"></canvas><div id="pointer">▼</div></div>
                 <div class="action-area"><button id="spinMenuBtn" class="search-btn">🎰 轉菜色</button></div>
@@ -196,6 +204,7 @@
                     <div id="fullMenuContainer" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
             </div>
+            
             <div id="ai-loading" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:1001; text-align:center; padding-top:200px;">
                 <div class="loader"></div><h3>🤖 AI 解析中...</h3>
             </div>
