@@ -23,23 +23,17 @@ window.onload = () => {
         // 3. 檢查 Key 並決定流程
         const savedKey = localStorage.getItem('food_wheel_api_key');
         
-        // 預填設定頁面的偏好 (無論是否已登入都先做，以防使用者稍後要修改)
+        // 預填設定頁面的偏好
         if (typeof window.populateSetupKeywords === 'function') window.populateSetupKeywords(); 
         if (typeof window.populateSetupGeneralPrefs === 'function') window.populateSetupGeneralPrefs();
         
         const geminiKey = localStorage.getItem('food_wheel_gemini_key');
         if(geminiKey && document.getElementById('userGeminiKey')) {
             document.getElementById('userGeminiKey').value = geminiKey;
-            // 如果有 Gemini Key，可以嘗試自動載入模型列表 (非阻塞)
-            if(typeof window.validateGeminiKey === 'function') {
-                // 模擬點擊驗證按鈕，但不要彈出 alert 
-                // 這裡簡單略過，讓使用者自己點擊載入
-            }
         }
 
         if (savedKey) {
             console.log("Saved key found, loading Maps SDK...");
-            // 有 Key -> 載入 SDK -> SDK callback 會呼叫 initApp
             if (typeof window.loadGoogleMapsScript === 'function') {
                 window.loadGoogleMapsScript(savedKey);
             } else {
@@ -48,7 +42,6 @@ window.onload = () => {
             }
         } else {
             console.log("No key found, showing Setup screen.");
-            // 無 Key -> 顯示設定頁
             document.getElementById('setup-screen').style.display = 'block';
             document.getElementById('app-screen').style.display = 'none';
             if (typeof window.showGuide === 'function') window.showGuide('desktop');
@@ -111,7 +104,7 @@ if(spinBtn) {
                     const winner = window.places[winningIndex];
                     if(!winner) throw new Error("Winner undefined");
 
-                    // 顯示結果
+                    // 顯示結果 (包含 Detail Fetch 邏輯)
                     updateResultUI(winner);
 
                     if (spinMode === 'eliminate') {
@@ -141,40 +134,71 @@ if(spinBtn) {
 
 // 輔助函式：更新結果顯示
 function updateResultUI(p) {
+    // 1. 先顯示基本資料 (避免等待 Loading 空白)
     document.getElementById('storeName').innerText = p.name;
     document.getElementById('storeRating').innerText = p.rating ? `⭐ ${p.rating} (${p.user_ratings_total})` : "無評價";
     document.getElementById('storeAddress').innerText = p.vicinity || p.formatted_address;
-    document.getElementById('storeDistance').innerHTML = p.realDistanceText ? `${p.realDistanceText} / ${p.realDurationText}` : "";
     
-    // 顯示按鈕
-    ['navLink', 'webLink', 'menuPhotoLink', 'btnAiMenu', 'btnLike', 'btnDislike'].forEach(id => {
+    // 基本營業狀態 (來自列表資料)
+    let statusText = "";
+    if (p.opening_hours) {
+        statusText = p.opening_hours.open_now ? " 🟢 營業中" : " 🔴 休息中";
+    } else {
+        statusText = " (時間未知)";
+    }
+    document.getElementById('storeDistance').innerHTML = (p.realDistanceText ? `${p.realDistanceText} / ${p.realDurationText}` : "") + statusText;
+
+    // 2. 顯示按鈕 (先全部顯示，之後依照 Detail 結果隱藏 webLink)
+    ['navLink', 'menuPhotoLink', 'btnAiMenu', 'btnLike', 'btnDislike'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.style.display = 'inline-block'; // 或 block，視 CSS 而定
+        if(el) el.style.display = 'inline-block';
     });
+    // 預設先隱藏 webLink，等確認有官網再顯示
+    document.getElementById('webLink').style.display = 'none';
 
     // 設定連結
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&query_place_id=${p.place_id}`;
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}&destination_place_id=${p.place_id}`;
     document.getElementById('navLink').href = mapUrl;
     
-    // 設定相片連結
-    const photoBtn = document.getElementById('menuPhotoLink');
-    if (p.photos && p.photos.length > 0) {
-        photoBtn.href = p.photos[0].getUrl({maxWidth: 800});
-        photoBtn.style.display = 'inline-block';
-        window.currentStoreForMenu = p; // 為了 AI Menu
-        document.getElementById('btnAiMenu').style.display = 'inline-block';
-    } else {
-        photoBtn.style.display = 'none';
-        document.getElementById('btnAiMenu').style.display = 'none';
-    }
+    // 菜單圖片搜尋
+    const menuQuery = `${p.name} ${p.vicinity || ""} 菜單`;
+    document.getElementById('menuPhotoLink').href = `https://www.google.com/search?q=${encodeURIComponent(menuQuery)}&tbm=isch`;
 
-    // 更新 hit count
+    // AI 菜單按鈕設定
+    window.currentStoreForMenu = p;
+    document.getElementById('btnAiMenu').style.display = 'inline-block';
+
+    // 3. 呼叫 GetDetails 取得更詳細資料 (為了檢查 website)
+    const service = new google.maps.places.PlacesService(document.createElement('div'));
+    service.getDetails({
+        placeId: p.place_id,
+        fields: ['name', 'website', 'url', 'opening_hours'] // 只取需要的欄位節省流量
+    }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            // === 關鍵邏輯：檢查是否有官網 ===
+            const webBtn = document.getElementById('webLink');
+            if (place.website) {
+                // 有官網 -> 顯示按鈕 -> 連結至 Google Maps 總覽頁 (place.url)
+                webBtn.style.display = 'inline-block';
+                webBtn.href = place.url; 
+            } else {
+                // 無官網 -> 隱藏按鈕
+                webBtn.style.display = 'none';
+            }
+
+            // 更新更精準的營業時間 (如果有)
+            if (place.opening_hours) {
+                const isOpen = place.opening_hours.isOpen ? place.opening_hours.isOpen() : place.opening_hours.open_now;
+                 statusText = isOpen ? " 🟢 營業中" : " 🔴 休息中";
+                 // 重新組合距離字串
+                 document.getElementById('storeDistance').innerHTML = (p.realDistanceText ? `${p.realDistanceText} / ${p.realDurationText}` : "") + statusText;
+            }
+        }
+    });
+
+    // 更新 hit count 與評價
     if(window.hitCounts[p.place_id] !== undefined) window.hitCounts[p.place_id]++;
-    
-    // 更新評價狀態
     updateRatingUI(p.place_id);
-    
-    // 綁定評價按鈕事件
     document.getElementById('btnLike').onclick = () => ratePlace(p.place_id, 'like');
     document.getElementById('btnDislike').onclick = () => ratePlace(p.place_id, 'dislike');
 }
