@@ -8,6 +8,11 @@
     </head>
 <body>
 
+    <div id="imageModal" class="modal">
+        <span class="close-modal" onclick="closeImageModal()">&times;</span>
+        <img class="modal-content" id="modalImg">
+    </div>
+
     <div id="setup-screen" class="container setup-container">
         <h1>🍴 今天吃什麼？<span class="badge">公開版</span></h1>
         <p class="intro-text">本工具採用 <strong>Bring Your Own Key</strong> 模式。請輸入您的 Google Maps API Key 即可免費使用。</p>
@@ -27,7 +32,7 @@
             <label for="userApiKey">請在此貼上 Google Maps API Key：</label>
             <input type="text" id="userApiKey" placeholder="AIzaSy..." autocomplete="off">
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button onclick="validateAndSaveKey()" class="start-btn" style="background: #3498db; flex: 1;">🔍 驗證並儲存</button>
+                <button onclick="validateAndSaveKey()" class="start-btn start-btn-large" style="background: #3498db; flex: 1;">🔍 驗證並儲存</button>
             </div>
             <p class="privacy-note">🔒 您的 Key 僅儲存於瀏覽器 (LocalStorage)。</p>
         </div>
@@ -119,17 +124,8 @@
             </div>
 
             <div class="game-layout">
-                <div class="list-panel">
-                    <h3>📋 搜尋結果清單</h3>
-                    <div class="table-wrapper">
-                        <table id="resultsTable">
-                            <thead><tr><th>店名</th><th>星評</th><th>距離</th><th>次數</th></tr></thead>
-                            <tbody><tr><td colspan="4" style="text-align:center;">尚未搜尋...</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
                 
-                <div class="wheel-section">
+                <div class="wheel-section-centered">
                     <div class="filter-box">
                         <input type="checkbox" id="filterDislike"><label for="filterDislike">🛡️ 濾除踩雷商家</label>
                     </div>
@@ -140,30 +136,41 @@
                     <div class="action-area">
                         <button id="spinBtn" disabled style="opacity: 0.5;">請先搜尋店家</button>
                     </div>
+                </div>
+
+                <div id="result">
+                    <h2 id="storeName">準備好就搜尋店家吧！</h2>
+                    <p id="storeRating" style="font-weight: bold; color: #f39c12;"></p>
+                    <p id="storeAddress"></p>
+                    <p id="storePhone"></p>
+                    <p id="storeStatus"></p>
+                    <p id="storeDistance"></p>
                     
-                    <div id="result">
-                        <h2 id="storeName">準備好就搜尋店家吧！</h2>
-                        <p id="storeRating" style="font-weight: bold; color: #f39c12;"></p>
-                        <p id="storeAddress"></p>
-                        <p id="storePhone"></p>
-                        <p id="storeStatus"></p>
-                        <p id="storeDistance"></p>
-                        
-                        <p id="userPersonalRating" style="font-size: 0.9rem; margin: 5px 0; min-height: 20px;"></p>
+                    <p id="userPersonalRating" style="font-size: 0.9rem; margin: 5px 0; min-height: 20px;"></p>
 
-                        <div class="action-buttons-grid">
-                            <button id="btnDislike" class="rate-btn dislike">💣 踩雷</button>
-                            <button id="btnLike" class="rate-btn like">👍 回訪</button>
-                        </div>
+                    <div class="action-buttons-grid">
+                        <button id="btnDislike" class="rate-btn dislike">💣 踩雷</button>
+                        <button id="btnLike" class="rate-btn like">👍 回訪</button>
+                    </div>
 
-                        <div id="external-links" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
-                            <a id="navLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #e67e22;">📍 導航前往</a>
-                            <a id="webLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #3498db;">🌐 商家總覽 / 訂餐</a>
-                            <a id="menuPhotoLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #9b59b6;">🖼️ 搜尋菜單圖片</a>
-                            <button id="btnAiMenu" onclick="openAiMenuSelector()" class="nav-btn" style="display:none; background: linear-gradient(45deg, #8e44ad, #c0392b);">✨ AI 讀取菜單 (Beta)</button>
-                        </div>
+                    <div id="external-links" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+                        <a id="navLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #e67e22;">📍 導航前往</a>
+                        <a id="webLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #3498db;">🌐 商家總覽 / 訂餐</a>
+                        <a id="menuPhotoLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #9b59b6;">🖼️ 搜尋菜單圖片</a>
+                        <button id="btnAiMenu" onclick="openAiMenuSelector()" class="nav-btn" style="display:none; background: linear-gradient(45deg, #8e44ad, #c0392b);">✨ AI 讀取菜單 (Beta)</button>
                     </div>
                 </div>
+                
+                <div class="list-panel-full">
+                    <h3>📋 搜尋結果清單</h3>
+                    <div class="table-wrapper">
+                        <table id="resultsTable">
+                            <thead><tr><th>店名</th><th>星評</th><th>距離</th><th>次數</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="text-align:center;">尚未搜尋...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
 
