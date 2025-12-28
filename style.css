@@ -350,3 +350,8 @@ h1 { color: #333; margin-bottom: 20px; display: flex; align-items: center; justi
     display: flex; justify-content: space-between; font-size: 0.9rem;
 }
 .cart-total { font-weight: bold; font-size: 1.2rem; text-align: right; margin-top: 10px; color: #e74c3c; }
+
+/* 確保結果操作按鈕預設隱藏 */
+#navLink, #webLink, #menuPhotoLink, #btnAiMenu, #btnLike, #btnDislike {
+    display: none;
+}
