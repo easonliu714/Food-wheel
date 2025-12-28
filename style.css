@@ -1,9 +1,9 @@
 /* =========================================
    Food Wheel Style Sheet
-   Version: 2025-12-28-v5 (Button Color Update)
+   Version: 2025-12-28-v6 (Disclaimer Added)
    Tasks: 
-   1. 修改 #addToOrderBtn 按鈕背景色為深色
-   2. 保持之前的響應式排版與樣式優化
+   1. 新增 AI 免責聲明樣式
+   2. 保持之前的所有設定 (深色按鈕、響應式排版等)
    ========================================= */
 
 body {
@@ -175,10 +175,18 @@ tr.eliminated { opacity: 0.4; text-decoration: line-through; background: #f0f0f0
 .rate-btn.dislike.active { background: #c0392b; color: white; }
 .small-btn { padding: 4px 8px; font-size: 0.8rem; background: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer; }
 
-/* [Modified] 菜單頁面：加入購物車按鈕 (深色背景) */
-#addToOrderBtn {
-    background-color: #34495e; /* 深灰藍色 */
-    color: white;
+/* 菜單頁面：加入購物車按鈕 (深色背景) */
+#addToOrderBtn { background-color: #34495e; color: white; }
+
+/* [NEW] 免責聲明樣式 */
+.ai-disclaimer {
+    font-size: 0.8rem;
+    color: #999;
+    text-align: center;
+    margin-top: 25px;
+    padding: 10px 0;
+    border-top: 1px dashed #eee;
+    line-height: 1.5;
 }
 
 /* AI Menu Screen */
