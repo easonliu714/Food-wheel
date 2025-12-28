@@ -20,8 +20,7 @@
 
         <details id="guide-details" open>
             <summary class="guide-summary">📖 點擊查看/隱藏 詳細申請步驟</summary>
-            <div id="guide-content" class="tutorial-box">
-                </div>
+            <div id="guide-content" class="tutorial-box"></div>
         </details>
 
         <div class="key-input-area">
@@ -48,29 +47,12 @@
                 </select>
                 <button onclick="testSelectedGeminiModel()" class="small-btn" style="background:#27ae60; color:white; flex:1;">⚡ 測試</button>
             </div>
-
-            <details>
-                <summary style="cursor: pointer; color: #9b59b6; font-weight: bold; font-size: 0.9rem;">📝 如何取得免費 Gemini Key？ (點擊展開)</summary>
-                <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px; font-size: 0.9rem; line-height: 1.6; text-align: left;">
-                    前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #9b59b6; font-weight: bold;">Google AI Studio</a> > "Get API key" > "Create API key"。
-                </div>
-            </details>
         </div>
 
         <div class="preferences-box">
             <h3>⚙️ 設定您的預設偏好</h3>
             <div class="pref-grid">
-                <div class="pref-item full-width">
-                    <label>🔎 預設搜尋策略</label>
-                    <select id="setupSearchMode">
-                        <option value="nearby" selected>📍 距離優先 (找最近)</option>
-                        <option value="famous">🌟 熱門優先 (找好店)</option>
-                    </select>
-                    <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">
-                        <strong>距離優先：</strong>嚴格由近到遠搜尋，適合時間緊迫。<br>
-                        <strong>熱門優先：</strong>分段掃描範圍內評價較高與知名的店，適合探險。
-                    </p>
-                </div>
+                <div class="pref-item full-width"><label>🔎 預設搜尋策略</label><select id="setupSearchMode"><option value="nearby" selected>📍 距離優先 (找最近)</option><option value="famous">🌟 熱門優先 (找好店)</option></select></div>
                 <div class="pref-item"><label>🎖️ 最低星評</label><select id="setupMinRating"><option value="0">⚪ 不限</option><option value="3.0" selected>⭐⭐⭐ 3.0+</option><option value="3.5">⭐⭐⭐☆ 3.5+</option><option value="4.0">⭐⭐⭐⭐ 4.0+</option><option value="4.5">⭐⭐⭐⭐☆ 4.5+</option></select></div>
                 <div class="pref-item"><label>🎡 轉盤模式</label><select id="setupSpinMode"><option value="repeat" selected>🔁 重複抽取</option><option value="eliminate">❌ 淘汰制</option></select></div>
                 <div class="pref-item"><label>🏃‍♂️ 交通方式</label><select id="setupTransport"><option value="WALKING" selected>走路 🚶 (20km/h)</option><option value="DRIVING">開車 🚗 (60km/h)</option></select></div>
@@ -172,8 +154,8 @@
 
                         <div id="external-links" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
                             <a id="navLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #e67e22;">📍 導航前往</a>
-                            <a id="webLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #3498db;">🌐 官方網站 / 訂餐</a>
-                            <a id="menuPhotoLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #9b59b6;">🖼️ 查看菜單圖片</a>
+                            <a id="webLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #3498db;">🌐 商家總覽 / 訂餐</a>
+                            <a id="menuPhotoLink" href="#" target="_blank" class="nav-btn" style="display:none; background: #9b59b6;">🖼️ 搜尋菜單圖片</a>
                             <button id="btnAiMenu" onclick="openAiMenuSelector()" class="nav-btn" style="display:none; background: linear-gradient(45deg, #8e44ad, #c0392b);">✨ AI 讀取菜單 (Beta)</button>
                         </div>
                     </div>
@@ -187,10 +169,11 @@
                 <h1 id="menuStoreTitle" style="font-size: 1.2rem;">AI 智能菜單</h1>
             </div>
             <div id="ai-step-1" class="menu-layout">
-                <h3>📷 選擇或上傳菜單圖片</h3>
+                <h3>📷 上傳菜單圖片 (可多選)</h3>
                 <div class="upload-area">
                     <label for="menuFileUpload" class="upload-btn">📤 上傳/拍攝 圖片</label>
-                    <input type="file" id="menuFileUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(this)">
+                    <input type="file" id="menuFileUpload" accept="image/*" multiple style="display:none;" onchange="handleFileUpload(this)">
+                    <button id="btnLoadSavedMenu" onclick="loadSavedMenu()" class="upload-btn" style="background:#f39c12; margin-left:10px; display:none;">📂 讀取已存菜單</button>
                 </div>
                 <div id="maps-photo-grid" class="photo-grid"></div>
                 <button id="btnAnalyzeMenu" onclick="analyzeSelectedPhotos()" class="search-btn" disabled style="margin-top:20px; opacity:0.5;">🤖 開始 AI 解析</button>
@@ -201,12 +184,16 @@
                 <div class="action-area"><button id="spinMenuBtn" class="search-btn">🎰 轉菜色</button></div>
                 <div id="menuResult" style="text-align: center; margin-bottom: 20px;">
                     <h2 id="dishName" style="color: #d35400;">...</h2><p id="dishPrice" style="font-weight: bold;"></p>
-                    <button id="addToOrderBtn" class="nav-btn" style="display:none;" onclick="addDishToCart()">➕ 加入</button>
+                    <button id="addToOrderBtn" class="nav-btn" style="display:none;">➕ 加入購物車</button>
                 </div>
                 <div class="cart-panel">
                     <h3>🛒 預點清單</h3><ul id="cartList" class="cart-list"></ul>
                     <div class="cart-total">總計：<span id="cartTotalDisplay">$0</span></div>
                     <button onclick="checkout()" class="search-btn" style="background: #27ae60; margin-top:10px;">✅ 結帳</button>
+                </div>
+                <div class="full-menu-panel" style="margin-top:20px;">
+                    <h3>📜 完整菜單明細</h3>
+                    <div id="fullMenuContainer" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
             </div>
             <div id="ai-loading" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:1001; text-align:center; padding-top:200px;">
