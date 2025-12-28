@@ -1,121 +1,198 @@
-/* ... (保留原有頂部基礎樣式，請直接覆蓋下方新增或修改的 class) ... */
+/* =========================================
+   Food Wheel Style Sheet
+   Version: 2025-12-28-v4 (Responsive Layout)
+   Tasks: 
+   1. 實作響應式排版：電腦版左右分欄，手機版上下垂直排列
+   2. 保持之前的所有樣式優化 (Modal, 按鈕加大等)
+   ========================================= */
 
-/* [NEW] 圖片 Modal 樣式 */
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 2000; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.9); 
-}
-.modal-content {
-    margin: auto;
-    display: block;
-    width: 80%;
-    max-width: 700px;
-    max-height: 90%;
-    object-fit: contain;
-    margin-top: 50px;
-}
-.close-modal {
-    position: absolute;
-    top: 15px;
-    right: 35px;
-    color: #f1f1f1;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    color: #333;
 }
 
-/* [NEW] 加大的開始按鈕 */
-.start-btn-large {
-    padding: 15px !important;
-    font-size: 1.2rem !important;
-    height: 60px;
-}
-
-/* Game Layout - 改為單欄垂直排列 */
-.game-layout {
+.container {
+    max-width: 900px; /* 電腦版放寬寬度以容納左右並排 */
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+}
+
+/* Header & Setup Styles */
+.setup-container { padding: 30px 20px; max-width: 600px; margin: 0 auto; } /* 設定頁維持窄版 */
+h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+.badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; vertical-align: middle; margin-left: 5px; }
+.intro-text { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 25px; }
+
+.header-bar {
+    background: #fff;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.header-bar h1 { margin: 0; font-size: 1.2rem; }
+.header-actions { display: flex; gap: 8px; }
+.header-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 20px; background: #f9f9f9; font-size: 0.85rem; cursor: pointer; }
+
+/* Tabs */
+.platform-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.tab-btn { background: none; border: none; padding: 8px 12px; cursor: pointer; color: #7f8c8d; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: #3498db; border-bottom: 2px solid #3498db; font-weight: bold; }
+
+/* Guide & Inputs */
+.tutorial-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef; }
+.step-card { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ddd; }
+.step-card:last-child { border-bottom: none; }
+.step-title { font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+.step-image-container img { max-width: 100%; border-radius: 6px; margin: 10px 0; border: 1px solid #ddd; }
+.key-input-area { margin-top: 20px; }
+.key-input-area input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; margin: 10px 0; }
+.privacy-note { font-size: 0.8rem; color: #27ae60; text-align: center; margin-top: 10px; }
+
+/* Preferences */
+.preferences-box { margin-top: 30px; padding: 20px; background: #fff; border-left: 4px solid #3498db; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.pref-grid, .keyword-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+.pref-item { display: flex; flex-direction: column; }
+.pref-item.full-width { grid-column: span 2; }
+.pref-item label { font-size: 0.9rem; margin-bottom: 5px; color: #555; }
+.setup-input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
+
+/* App Main View Controls */
+.location-box { padding: 15px 20px; background: #fdfdfd; border-bottom: 1px solid #eee; }
+.input-group { display: flex; gap: 10px; margin-top: 5px; }
+.input-group input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+#geoBtn { padding: 0 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+.controls { padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+.setting-row { flex: 1 1 20%; display: flex; flex-direction: column; margin-bottom: 5px; min-width: 140px; }
+.setting-row label { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 3px; }
+.setting-row select, .full-width-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+.search-btn { width: 100%; padding: 12px; background: #2c3e50; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+.search-btn:disabled { background: #95a5a6; cursor: not-allowed; }
+
+/* ================== Game Layout (Responsive) ================== */
+
+.game-layout {
+    display: flex;
+    flex-direction: column; /* 手機版預設：垂直排列 */
     gap: 20px;
     padding: 0 20px 40px 20px;
 }
 
-/* 1. 轉盤置中區 */
-.wheel-section-centered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+/* 手機版順序控制 (使用 Order) */
+.wheel-section-centered { order: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
+#result { order: 2; text-align: center; width: 100%; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.list-panel-full { order: 3; border: 1px solid #eee; border-radius: 8px; padding: 15px; background: #fff; max-height: 400px; overflow-y: auto; width: 100%; box-sizing: border-box; }
+
+.wheel-container { position: relative; width: 100%; max-width: 400px; height: auto; aspect-ratio: 1/1; margin: 20px 0; }
+canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+#pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 30px; color: #e74c3c; z-index: 5; text-shadow: 0 2px 2px rgba(0,0,0,0.3); }
+
+/* 電腦版樣式 (寬度大於 768px 時觸發) */
+@media (min-width: 768px) {
+    .game-layout {
+        display: grid;
+        /* 定義兩欄：左側自動填滿 (List)，右側固定 420px (Wheel + Result) */
+        grid-template-columns: 1fr 420px; 
+        grid-template-areas:
+            "list wheel"
+            "list result";
+        gap: 20px;
+        align-items: start;
+    }
+
+    .list-panel-full {
+        grid-area: list;
+        order: unset; /* 重置 order */
+        max-height: 800px; /* 電腦版清單可以長一點 */
+    }
+
+    .wheel-section-centered {
+        grid-area: wheel;
+        order: unset;
+    }
+
+    #result {
+        grid-area: result;
+        order: unset;
+    }
 }
 
-.wheel-container {
-    position: relative;
-    width: 400px;
-    height: 400px;
-    margin: 20px 0 20px 0; /* 縮小底部邊距，因為結果就在下方 */
-}
+/* ================== 其他元件樣式 ================== */
 
-/* 2. 結果區塊 - 移除原本 wheel-section 內的限制 */
-#result {
-    text-align: center;
-    width: 100%;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    order: 2; /* 確保在轉盤之後 */
-}
+/* 列表表格 */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; color: #666; font-weight: 600; }
+tr.eliminated { opacity: 0.4; text-decoration: line-through; background: #f0f0f0; }
+.store-link { color: #2980b9; text-decoration: none; font-weight: 500; }
 
-/* 3. 全寬度清單區 */
-.list-panel-full {
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 15px;
-    background: #fff;
-    max-height: 400px; /* 增加高度 */
-    overflow-y: auto;
-    order: 3; /* 放在最後 */
-    width: 100%;
-    box-sizing: border-box;
-}
+/* 轉盤按鈕 */
+.action-area { margin-bottom: 20px; width: 100%; text-align: center; }
+#spinBtn { padding: 15px 40px; font-size: 1.2rem; background: #e74c3c; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #c0392b; transition: transform 0.1s; }
+#spinBtn:active { transform: translateY(4px); box-shadow: none; }
 
-/* ... (保留按鈕、詳細資訊、圖片預覽等其他樣式) ... */
-/* 必須包含以下之前定義的 key styles */
-
-/* 確保詳細資訊排版 */
+/* 結果區詳細資訊 */
+#storeName { margin: 0; color: #2c3e50; font-size: 1.5rem; }
 #storePhone { color: #2980b9; font-weight: bold; margin: 8px 0; font-size: 1rem; }
 #storeStatus { margin: 5px 0; font-size: 0.95rem; }
 #storeDistance { font-size: 0.9rem; color: #666; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
 
-/* 圖片預覽區 */
-#menuImagesPreview {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 10px 5px;
-    margin-bottom: 15px;
-    background: #f9f9f9;
-    border-radius: 6px;
-    border: 1px dashed #ddd;
-}
-#menuImagesPreview img {
-    height: 80px;
-    width: auto;
-    border-radius: 4px;
-    cursor: zoom-in;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
+/* Modal 彈跳視窗 */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
+.modal-content { margin: auto; display: block; width: 80%; max-width: 700px; max-height: 90%; object-fit: contain; margin-top: 50px; }
+.close-modal { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
 
-/* Responsive */
+/* 加大的開始按鈕 */
+.start-btn-large { padding: 15px !important; font-size: 1.2rem !important; height: 60px; }
+
+/* 圖片預覽區 */
+#menuImagesPreview { display: flex; gap: 10px; overflow-x: auto; padding: 10px 5px; margin-bottom: 15px; background: #f9f9f9; border-radius: 6px; border: 1px dashed #ddd; }
+#menuImagesPreview img { height: 80px; width: auto; border-radius: 4px; cursor: zoom-in; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); flex-shrink: 0; }
+#menuImagesPreview img:hover { transform: scale(1.05); border-color: #3498db; }
+
+/* 上傳圖片網格 */
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 15px; }
+.photo-item img { width: 100%; height: 80px; object-fit: cover; border-radius: 4px; cursor: zoom-in; }
+
+/* 菜單表格可編輯提示 */
+.menu-table td { position: relative; padding: 10px 8px; }
+.menu-table td:nth-child(2):hover, .menu-table td:nth-child(3):hover { background-color: #fef9e7; cursor: pointer; }
+.menu-table td:nth-child(2):hover::after, .menu-table td:nth-child(3):hover::after { content: "✏️"; position: absolute; right: 2px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; opacity: 0.6; }
+
+/* 按鈕群組 */
+.nav-btn, .rate-btn { display: none; padding: 10px 20px; margin: 5px; text-decoration: none; color: white; border-radius: 4px; font-size: 0.9rem; border: none; cursor: pointer; }
+.action-buttons-grid { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+.rate-btn { background: #ecf0f1; color: #7f8c8d; flex: 1; }
+.rate-btn.like.active { background: #27ae60; color: white; }
+.rate-btn.dislike.active { background: #c0392b; color: white; }
+.small-btn { padding: 4px 8px; font-size: 0.8rem; background: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer; }
+
+/* AI Menu Screen */
+.menu-layout { padding: 20px; }
+.upload-area { text-align: center; padding: 30px; border: 2px dashed #ddd; border-radius: 8px; background: #fafafa; }
+.upload-btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; border-radius: 4px; cursor: pointer; }
+.cart-list { list-style: none; padding: 0; margin: 10px 0; }
+.cart-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+.cart-total { text-align: right; font-weight: bold; font-size: 1.1rem; margin: 10px 0; }
+.loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Responsive Adjustments for Small Screens */
 @media (max-width: 450px) {
-    .wheel-container { width: 300px; height: 300px; }
-    canvas { width: 300px; height: 300px; }
+    .container { width: 100%; box-shadow: none; }
+    .pref-grid, .keyword-settings-grid { grid-template-columns: 1fr; }
+    .pref-item.full-width { grid-column: span 1; }
 }
