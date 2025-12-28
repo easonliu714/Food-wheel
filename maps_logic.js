@@ -1,7 +1,5 @@
 // ================== maps_logic.js ==================
 
-// ... (initLocation, handleSearch, startSearch ... 保持不變，或請使用以下完整版) ...
-
 window.initLocation = function() {
     if (typeof google === 'undefined') { console.warn("Maps API not loaded"); return; }
     const addrInput = document.getElementById('currentAddress');
@@ -194,7 +192,6 @@ window.processResults = function(origin, results, maxLinearDist) {
             window.hitCounts = {};
             window.allSearchResults.forEach(p => window.hitCounts[p.place_id] = 0);
 
-            // 這裡呼叫 ui_control.js 裡的 refreshWheelData，因為現在它被全域定義了
             if (typeof window.refreshWheelData === 'function') {
                 window.refreshWheelData();
                 btn.innerText = `搜尋完成 (共 ${window.places.length} 間)`;
@@ -267,12 +264,11 @@ window.getDistances = function(origin, destinations, mode) {
                 }
                 resolve(processed);
             } else { 
-                // 重要：回傳 reject 讓 catch 捕捉
                 console.warn(`Distance Matrix Status: ${status}`);
                 if (status === 'OVER_QUERY_LIMIT' || status === 'REQUEST_DENIED' || status === 'UNKNOWN_ERROR') {
                     reject(status);
                 } else {
-                    resolve([]); // 輕微錯誤當作沒結果
+                    resolve([]); 
                 }
             }
         });
