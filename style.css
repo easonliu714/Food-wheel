@@ -1,9 +1,9 @@
 /* =========================================
    Food Wheel Style Sheet
-   Version: 2025-12-28-v4 (Responsive Layout)
+   Version: 2025-12-28-v5 (Button Color Update)
    Tasks: 
-   1. 實作響應式排版：電腦版左右分欄，手機版上下垂直排列
-   2. 保持之前的所有樣式優化 (Modal, 按鈕加大等)
+   1. 修改 #addToOrderBtn 按鈕背景色為深色
+   2. 保持之前的響應式排版與樣式優化
    ========================================= */
 
 body {
@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 900px; /* 電腦版放寬寬度以容納左右並排 */
+    max-width: 900px;
     margin: 0 auto;
     background: #fff;
     min-height: 100vh;
@@ -25,7 +25,7 @@ body {
 }
 
 /* Header & Setup Styles */
-.setup-container { padding: 30px 20px; max-width: 600px; margin: 0 auto; } /* 設定頁維持窄版 */
+.setup-container { padding: 30px 20px; max-width: 600px; margin: 0 auto; }
 h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
 .badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; vertical-align: middle; margin-left: 5px; }
 .intro-text { text-align: center; color: #7f8c8d; font-size: 0.95rem; margin-bottom: 25px; }
@@ -90,7 +90,6 @@ h1 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
     padding: 0 20px 40px 20px;
 }
 
-/* 手機版順序控制 (使用 Order) */
 .wheel-section-centered { order: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
 #result { order: 2; text-align: center; width: 100%; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 .list-panel-full { order: 3; border: 1px solid #eee; border-radius: 8px; padding: 15px; background: #fff; max-height: 400px; overflow-y: auto; width: 100%; box-sizing: border-box; }
@@ -103,7 +102,6 @@ canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 5px 15px r
 @media (min-width: 768px) {
     .game-layout {
         display: grid;
-        /* 定義兩欄：左側自動填滿 (List)，右側固定 420px (Wheel + Result) */
         grid-template-columns: 1fr 420px; 
         grid-template-areas:
             "list wheel"
@@ -111,18 +109,15 @@ canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 5px 15px r
         gap: 20px;
         align-items: start;
     }
-
     .list-panel-full {
         grid-area: list;
-        order: unset; /* 重置 order */
-        max-height: 800px; /* 電腦版清單可以長一點 */
+        order: unset;
+        max-height: 800px;
     }
-
     .wheel-section-centered {
         grid-area: wheel;
         order: unset;
     }
-
     #result {
         grid-area: result;
         order: unset;
@@ -179,6 +174,12 @@ tr.eliminated { opacity: 0.4; text-decoration: line-through; background: #f0f0f0
 .rate-btn.like.active { background: #27ae60; color: white; }
 .rate-btn.dislike.active { background: #c0392b; color: white; }
 .small-btn { padding: 4px 8px; font-size: 0.8rem; background: #95a5a6; color: white; border: none; border-radius: 3px; cursor: pointer; }
+
+/* [Modified] 菜單頁面：加入購物車按鈕 (深色背景) */
+#addToOrderBtn {
+    background-color: #34495e; /* 深灰藍色 */
+    color: white;
+}
 
 /* AI Menu Screen */
 .menu-layout { padding: 20px; }
